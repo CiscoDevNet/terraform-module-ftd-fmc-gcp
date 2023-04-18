@@ -1,10 +1,9 @@
 
 <!-- BEGIN_TF_DOCS -->
-# This is used as building blocks to provision VMs in GCP:
 
 ## Overview
 
-This is an example on how to create a mutiple FTDv instance with the module.This is a module for Cisco ASAv in GCP.
+This is an example on how to create a mutiple FTDv instances and single FMC with the module. This is a module for Cisco ASAv in GCP.
 ## Prerequisites
 
 Make sure you have the following:
@@ -18,16 +17,19 @@ Make sure you have the following:
 
 ## Requirements
 
+
 | Name | Version |
 |------|---------|
-| <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= v1.3.2 |
-| <a name="requirement_gcp"></a> [gcp](#requirement\_gcp) | ~> 3.0 |
+| <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >=v1.3.2 |
+| <a name="requirement_google"></a> [google](#requirement\_google) | ~> 3.80, <4.0 |
+| <a name="requirement_google-beta"></a> [google-beta](#requirement\_google-beta) | ~> 3.80, <4.0 |
+| <a name="requirement_template"></a> [template](#requirement\_template) | ~> 2.2.0 |
 
 ## Providers
 
 | Name | Version |
 |------|---------|
-| <a name="requirement_gcp"></a> [gcp](#requirement\_gcp) | ~> 3.0 |
+| <a name="provider_google"></a> [google](#provider\_google) | ~> 3.80, <4.0 |
 
 ## Prerequisites
 
@@ -36,14 +38,20 @@ Install gcloud and authenticate by running the following command
 gcloud auth application-default login
 ```
 
-Additionally, Google cloud project credentials can be used following this link: 
+Additionally, Google cloud project credentials can be used following this link:
 [Getting started with Terraform on Google Cloud](https://cloud.google.com/community/tutorials/getting-started-on-gcp-with-terraform)
+
 
 ## Modules
 
 | Name | Source | Version |
 |------|--------|---------|
-| <a name="asa-1"></a> [asa-1](#module\_asa-1) | ./modules/asa-1 | n/a |
+| <a name="module_lb-1"></a> [lb-1](#module\_lb-1) | ../../modules/load_balancer | n/a |
+| <a name="module_networking"></a> [networking](#module\_networking) | ../../modules/networking | n/a |
+| <a name="module_service_accounts"></a> [service\_accounts](#module\_service\_accounts) | ../../modules/service_accounts | n/a |
+| <a name="module_vm"></a> [vm](#module\_vm) | ../../modules/vm | n/a |
+
+
 
 ## Examples
 
@@ -152,33 +160,41 @@ Alternatively ```ssh -oHostKeyAlgorithms=+ssh-rsa -oPubkeyAcceptedAlgorithms=+ss
 
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
-| project_id | The ID of the project where VPC networks will be created | string | - | yes |
-| region | The region of the VPC networks will be created | string | - | yes |
-| networks | A list of VPC network related data such as name, cidr range, appliance ip, has external ip or not  | `list`| [] | no |
-| mgmt_network | The name of management VPC network | string | vpc-mgmt | no |
-| diag_network | The name of dmz2 VPC network | string | vpc-diag | no|
-| outside_network | The name of outside VPC network | string | vpc-mgmt | no|
-| inside_network | The name of inside VPC network | string | vpc-inside | no |
-| dmz_network | The name of dmz VPC network | string | vpc-dmz | no|
-| num_instances | Number of instances to create | number | 1 | no |
-| vm_zones | zones of vm instances | string | - | yes |
-| vm_machine_type | The machine type of the instance | string | - | yes |
-| vm\_instance\_labels | Labels to apply to the vm instances. | `map(string)` | `{}` | no |
-| vm\_instance\_tags | Additional tags to apply to the instances.| `list(string)` | `[]` | no |
-| cisco_product_version | product version of cisco appliance | string| - | no |
-| day_0_config | The zero day configuration file name, under templates folder|string| - | yes |
-| admin_ssh_pub_key| ssh public key for admin user | string| - | yes |
-| custom_route_tag | custom route tag for the appliance | string | false | no |
-| hostname |  FTD hostname | string | ftd | no |
-| admin_password | ftd admin password | string | - | yes | 
+| <a name="input_admin_password"></a> [admin\_password](#input\_admin\_password) | password for admin | `string` | n/a | yes |
+| <a name="input_admin_ssh_pub_key"></a> [admin\_ssh\_pub\_key](#input\_admin\_ssh\_pub\_key) | ssh public key for admin | `any` | n/a | yes |
+| <a name="input_allow_global_access"></a> [allow\_global\_access](#input\_allow\_global\_access) | Internal LB allow global access or not | `bool` | `false` | no |
+| <a name="input_appliance_ips_fmc"></a> [appliance\_ips\_fmc](#input\_appliance\_ips\_fmc) | internal IP addresses for cisco appliance | `list(string)` | `[]` | no |
+| <a name="input_custom_route_tag"></a> [custom\_route\_tag](#input\_custom\_route\_tag) | tag for custom route | `string` | `"cisco-ftd"` | no |
+| <a name="input_diag_network"></a> [diag\_network](#input\_diag\_network) | diag network name | `string` | `""` | no |
+| <a name="input_dmz_network"></a> [dmz\_network](#input\_dmz\_network) | dmz network name | `string` | `""` | no |
+| <a name="input_enable_password"></a> [enable\_password](#input\_enable\_password) | enable password for ASA zero day config | `string` | n/a | yes |
+| <a name="input_fmc_day_0_config"></a> [fmc\_day\_0\_config](#input\_fmc\_day\_0\_config) | Render a startup script for fmc with a template. | `string` | `"fmc.txt"` | no |
+| <a name="input_fmc_hostname"></a> [fmc\_hostname](#input\_fmc\_hostname) | FMC hostname | `string` | `"fmc"` | no |
+| <a name="input_ftd_cisco_product_version"></a> [ftd\_cisco\_product\_version](#input\_ftd\_cisco\_product\_version) | cisco product version | `string` | `"cisco-ftdv-7-0-0-94"` | no |
+| <a name="input_ftd_day_0_config"></a> [ftd\_day\_0\_config](#input\_ftd\_day\_0\_config) | Render a startup script with a template. | `string` | `"startup_file.json"` | no |
+| <a name="input_ftd_hostname"></a> [ftd\_hostname](#input\_ftd\_hostname) | FTD hostname | `string` | `"ftd"` | no |
+| <a name="input_ftd_num_instances"></a> [ftd\_num\_instances](#input\_ftd\_num\_instances) | Number of instances to create. This value is ignored if static\_ips is provided. | `number` | n/a | yes |
+| <a name="input_inside_network"></a> [inside\_network](#input\_inside\_network) | inside network name | `string` | `""` | no |
+| <a name="input_mgmt_network"></a> [mgmt\_network](#input\_mgmt\_network) | management network name | `string` | `""` | no |
+| <a name="input_named_ports"></a> [named\_ports](#input\_named\_ports) | Named name and port. https://cloud.google.com/load-balancing/docs/backend-service#named_ports | <pre>list(object({<br>    name = string<br>    port = number<br>  }))</pre> | <pre>[<br>  {<br>    "name": "console",<br>    "port": 22<br>  },<br>  {<br>    "name": "https",<br>    "port": 443<br>  }<br>]</pre> | no |
+| <a name="input_networks"></a> [networks](#input\_networks) | a list of VPC | `list(object({ name = string, cidr = string, appliance_ip = list(string), external_ip = bool }))` | `[]` | no |
+| <a name="input_outside_network"></a> [outside\_network](#input\_outside\_network) | outside network name | `string` | `""` | no |
+| <a name="input_project_id"></a> [project\_id](#input\_project\_id) | The project ID to host the network in | `any` | n/a | yes |
+| <a name="input_project_services"></a> [project\_services](#input\_project\_services) | List of services to enable on the project where Vault will run. These services are required in order for this Vault setup to function. | `list(string)` | <pre>[<br>  "compute.googleapis.com",<br>  "iam.googleapis.com"<br>]</pre> | no |
+| <a name="input_region"></a> [region](#input\_region) | The region | `any` | n/a | yes |
+| <a name="input_service_port"></a> [service\_port](#input\_service\_port) | service port | `number` | `80` | no |
+| <a name="input_use_internal_lb"></a> [use\_internal\_lb](#input\_use\_internal\_lb) | use internal LB or not | `bool` | `false` | no |
+| <a name="input_vm_instance_labels"></a> [vm\_instance\_labels](#input\_vm\_instance\_labels) | Labels to apply to the vm instances. | `map(string)` | `{}` | no |
+| <a name="input_vm_instance_tags"></a> [vm\_instance\_tags](#input\_vm\_instance\_tags) | Additional tags to apply to the instances, please note the service account is used as much as possible as best practice | `list(string)` | `[]` | no |
+| <a name="input_vm_machine_type"></a> [vm\_machine\_type](#input\_vm\_machine\_type) | machine type for appliance | `string` | `"e2-standard-4"` | no |
+| <a name="input_vm_zones"></a> [vm\_zones](#input\_vm\_zones) | The zones | `list(string)` | n/a | yes |
 
 ## Outputs
 
 | Name | Description |
 |------|-------------|
-| networks\_map| The internal networks data structure used|
-| vm_external\_ips | The external IPs of the vm instances|
-| external\_lb_ip | The IP of external load balancer |
-| internal\_lb_ip | The IP of internal load balancer |
-
-<!-- END_TF_DOCS -->
+| <a name="output_FMC_Public_IP"></a> [FMC\_Public\_IP](#output\_FMC\_Public\_IP) | Public IP of FMC |
+| <a name="output_FTD_Public_IP"></a> [FTD\_Public\_IP](#output\_FTD\_Public\_IP) | Public IP of FMC |
+| <a name="output_ftd_vm_external_ips"></a> [ftd\_vm\_external\_ips](#output\_ftd\_vm\_external\_ips) | external ips for vm |
+| <a name="output_networks_list"></a> [networks\_list](#output\_networks\_list) | list of networks |
+| <a name="output_networks_map"></a> [networks\_map](#output\_networks\_map) | map of networks |
