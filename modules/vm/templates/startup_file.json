@@ -1,0 +1,8 @@
+{
+    "AdminPassword":  "${admin_password}",
+    "Hostname":       "${ftd_hostname}",
+    "ManageLocally":  "No",
+    "FmcIp":          "${fmc_ip}",
+    "FmcRegKey":      "${reg_key}",
+    "FmcNatId":       "${fmc_nat_id}",
+}
